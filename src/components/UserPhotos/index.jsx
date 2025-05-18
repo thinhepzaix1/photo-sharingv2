@@ -1,17 +1,41 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Card, CardMedia, Typography, Link } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
-import models from '../../modelData/models';
+import fetchModel from '../../lib/fetchModelData';
 
 function UserPhotos() {
   const { userId } = useParams();
-  const photos = models.photoOfUserModel(userId);
+  const [photos, setPhotos] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  if (!photos || !Array.isArray(photos)) {
+  useEffect(() => {
+    const fetchPhotos = async () => {
+      try {
+        const photoData = await fetchModel(`/api/photo/photosOfUser/${userId}`);
+        setPhotos(photoData);
+        setLoading(false);
+      } catch (err) {
+        setError('Không thể tải ảnh');
+        setLoading(false);
+      }
+    };
+    fetchPhotos();
+  }, [userId]);
+
+  if (loading) {
+    return <Typography>Đang tải...</Typography>;
+  }
+
+  if (error) {
+    return <Typography color="error">{error}</Typography>;
+  }
+
+  if (!photos || photos.length === 0) {
     return (
       <div style={{ padding: '20px' }}>
-        <Typography variant="h6">No photos available for this user.</Typography>
+        <Typography variant="h6">Không có ảnh nào cho người dùng này.</Typography>
       </div>
     );
   }
@@ -47,7 +71,7 @@ function UserPhotos() {
                 </div>
               ))
             ) : (
-              <Typography>No comments yet.</Typography>
+              <Typography>Chưa có bình luận.</Typography>
             )}
           </div>
         </Card>

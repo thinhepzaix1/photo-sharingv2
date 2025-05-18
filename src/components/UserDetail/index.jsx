@@ -1,17 +1,39 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Typography, Link } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
-import models from '../../modelData/models'; // Import dữ liệu giả
+import fetchModel from '../../lib/fetchModelData';
 
 /**
  * Define UserDetail, a React component of Project 4.
  */
 function UserDetail() {
-  // Lấy userId từ URL
   const { userId } = useParams();
-  // Lấy thông tin người dùng từ dữ liệu giả
-  const user = models.userModel(userId);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const userData = await fetchModel(`/api/user/${userId}`);
+        setUser(userData);
+        setLoading(false);
+      } catch (err) {
+        setError('Không thể tải thông tin người dùng');
+        setLoading(false);
+      }
+    };
+    fetchUser();
+  }, [userId]);
+
+  if (loading) {
+    return <Typography>Đang tải...</Typography>;
+  }
+
+  if (error) {
+    return <Typography color="error">{error}</Typography>;
+  }
 
   return (
     <div style={{ padding: '20px' }}>
